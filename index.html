@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<title>Shopping Feed Enhancer — Image Input Validation (Metagenics)</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --good: #047857;
+    --good-soft: #ecfdf5;
+    --warn: #b45309;
+    --warn-soft: #fffbeb;
+    --bad: #b91c1c;
+    --bad-soft: #fef2f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Cover */
+  header.cover {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 32px;
+    margin-bottom: 24px;
+  }
+  header.cover .eyebrow {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  header.cover h1 {
+    font-size: 38px;
+    line-height: 1.2;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  header.cover .subtitle {
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 24px;
+  }
+  header.cover .meta {
+    font-size: 14px;
+    color: var(--muted);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  header.cover .meta strong { color: var(--ink); font-weight: 600; }
+
+  /* Resource banner at top */
+  .resources {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 24px 0 40px;
+  }
+  .resources h3 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .resources .links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .resources a.card {
+    display: block;
+    text-decoration: none;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .resources a.card:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .resources a.card .label {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .resources a.card .title { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+  .resources a.card .desc { font-size: 12.5px; color: var(--muted); }
+
+  /* Headings */
+  h2 {
+    font-size: 26px;
+    margin: 56px 0 16px;
+    letter-spacing: -0.01em;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  h3 {
+    font-size: 19px;
+    margin: 32px 0 12px;
+    letter-spacing: -0.005em;
+  }
+  h4 {
+    font-size: 15px;
+    margin: 20px 0 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+
+  .callout {
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+    padding: 18px 22px;
+    margin: 20px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout.good { background: var(--good-soft); border-color: var(--good); }
+  .callout.warn { background: var(--warn-soft); border-color: var(--warn); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout strong.label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  .callout.good strong.label { color: var(--good); }
+  .callout.warn strong.label { color: var(--warn); }
+
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+
+  code {
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.88em;
+    color: #0f172a;
+    font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  }
+
+  /* Pipeline */
+  .pipeline {
+    margin: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .pipeline-step {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 22px;
+    display: flex;
+    gap: 18px;
+  }
+  .pipeline-step.new {
+    border-color: var(--accent);
+    background: linear-gradient(to right, var(--accent-soft) 0%, var(--surface) 60%);
+  }
+  .pipeline-step .num {
+    width: 32px; height: 32px;
+    background: var(--ink); color: white;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px;
+    flex-shrink: 0;
+  }
+  .pipeline-step.new .num { background: var(--accent); }
+  .pipeline-step .body { flex: 1; min-width: 0; }
+  .pipeline-step h4 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+  .pipeline-step .badge-new {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: 2px;
+    letter-spacing: 0.04em;
+  }
+  .pipeline-step dl {
+    margin: 8px 0 0;
+    font-size: 14px;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 4px 14px;
+  }
+  .pipeline-step dt {
+    color: var(--muted);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    padding-top: 2px;
+  }
+  .pipeline-step dd { margin: 0; }
+  .pipeline-step .example {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 5px;
+    font-size: 13px;
+    color: #475569;
+    border-left: 3px solid var(--line);
+  }
+  .pipeline-step.new .example { border-left-color: var(--accent); background: #f0f9ff; }
+  .pipeline-step .example strong { color: var(--ink); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+  /* Product cards (A/B) */
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 28px 0;
+  }
+  .product-card .header-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .product-card .pack-img {
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #f8fafc;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+  .product-card .pack-img.placeholder {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--muted); text-align: center;
+  }
+  .product-card .header-text { flex: 1; min-width: 0; }
+  .product-card h3 { margin-top: 0; margin-bottom: 4px; }
+  .product-card .pid { font-size: 12px; color: var(--muted); font-family: monospace; }
+
+  .orig-desc {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #334155;
+    margin: 12px 0;
+  }
+  .orig-desc strong.label {
+    color: var(--ink);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .ab-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 8px;
+    font-size: 14px;
+  }
+  .ab-table th, .ab-table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+  }
+  .ab-table th {
+    background: #f8fafc;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ab-table th.with-img { background: var(--accent-soft); color: var(--accent); }
+  .ab-table .attr-name {
+    font-family: monospace;
+    font-size: 12px;
+    background: #f1f5f9;
+    width: 160px;
+    color: #334155;
+  }
+  .ab-table .value-cell { font-size: 13.5px; }
+  .ab-table .value-cell ul { padding-left: 18px; margin: 0; }
+  .ab-table .value-cell li { margin-bottom: 4px; }
+  .hl { background: #fef3c7; padding: 0 2px; border-radius: 2px; font-weight: 500; }
+  .hl-strong { background: #fde68a; padding: 0 3px; border-radius: 2px; font-weight: 600; }
+
+  .finding {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--good-soft);
+    border-left: 3px solid var(--good);
+    border-radius: 0 4px 4px 0;
+    font-size: 13.5px;
+  }
+  .finding strong.label {
+    color: var(--good);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  table.spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  table.spec-table th, table.spec-table td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.spec-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .tag.ok { background: var(--good-soft); color: var(--good); }
+  .tag.partial { background: var(--warn-soft); color: var(--warn); }
+  .tag.no { background: var(--bad-soft); color: var(--bad); }
+
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 720px) {
+    .resources .links { grid-template-columns: 1fr; }
+    .pipeline-step dl { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow">Internal Test Report</div>
+  <h1>Reading product packaging — does it actually help?</h1>
+  <p class="subtitle">Image input feature, validated on 5 Metagenics products</p>
+  <div class="meta">
+    <span><strong>Prepared by:</strong> Darren Huang</span>
+    <span><strong>Date:</strong> 15 May 2026</span>
+    <span><strong>For:</strong> James Locke, Jason Mun</span>
+  </div>
+</header>
+
+<div class="resources">
+  <h3>The data, if you want to poke at it</h3>
+  <div class="links">
+    <a class="card" href="https://docs.google.com/spreadsheets/d/14pFTtuSyll1vb_je5mL8VCEUW_Tes2uXAD0zdJCV_Tk/edit" target="_blank" rel="noopener">
+      <div class="label">Google Sheet · 2 tabs</div>
+      <div class="title">5-product test results</div>
+      <div class="desc">Tab 1: raw feed input · Tab 2: AI-enhanced output (ready for Merchant Center)</div>
+    </a>
+    <a class="card" href="https://feeds.datafeedwatch.com/106896/132aa4927dda6df1ce71a9381f7f40192379bc91.xml" target="_blank" rel="noopener">
+      <div class="label">Original feed · XML</div>
+      <div class="title">Metagenics primary feed</div>
+      <div class="desc">The live feed we read from — the 5 test products are the first 5 entries</div>
+    </a>
+  </div>
+</div>
+
+<section id="tldr">
+  <h2>The short version</h2>
+  <div class="callout good">
+    <strong class="label">Bottom line</strong>
+    <p>The tool can now read product packaging photos and pull out facts the feed text doesn't contain — exact dosages, probiotic strain codes, ingredient forms. We tested this on 5 Metagenics products with a controlled comparison (same prompts, same model, with vs. without the image). <strong>The image-driven output is genuinely richer, and we can prove the model isn't just making it up.</strong></p>
+  </div>
+  <p>This delivers the second of the three action items from the 29 April catch-up:</p>
+  <ul>
+    <li><span class="tag ok">Done</span> &nbsp; Build web fetch into the tool — scrape product detail pages, including image extraction.</li>
+    <li><span class="tag partial">Next</span> &nbsp; Test on RJ Living (furniture) and Bydee (apparel) — different industries will stress-test different attributes (dimensions, materials, colour, sizes).</li>
+    <li><span class="tag partial">Planned</span> &nbsp; Wire in a pre-onboarding audit step (the kind of audit work James has been running) so structural feed issues get caught before enhancement begins.</li>
+  </ul>
+</section>
+
+<section id="why">
+  <h2>Why this matters</h2>
+  <p>Most product feeds we see in the wild have minimal description text. Two of the five Metagenics products we tested have descriptions under 50 words — no ingredient list, no dosages, no strain names. With nothing else to work with, an AI rewrite can only reorganise what's already there, or guess.</p>
+  <p>Product packaging photos, on the other hand, almost always contain the structured information shoppers actually search for: pack size, dosage form, active ingredient names, strain codes, allergen flags. Feeding those photos to the model alongside the text closes the gap — without us having to ask the merchant to fix their data first.</p>
+</section>
+
+<section id="how-it-works">
+  <h2>How it works, end to end</h2>
+  <p>The merchant gives us a feed URL. From there, the tool runs the following steps, in order. Steps 3 and 4 are the new pieces we built since the 29 April catch-up.</p>
+  <div class="pipeline">
+
+    <div class="pipeline-step">
+      <span class="num">1</span>
+      <div class="body">
+        <h4>Read the merchant's feed</h4>
+        <dl>
+          <dt>What</dt><dd>Download the feed file (XML, CSV, or TSV) and turn each product into a normalised record.</dd>
+          <dt>Why</dt><dd>Every merchant exports their feed differently. We standardise it first so the rest of the pipeline doesn't have to care about format quirks.</dd>
+        </dl>
+        <div class="example"><strong>This run</strong> 296 Metagenics products parsed from a DataFeedWatch XML feed.</div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <span class="num">2</span>
+      <div class="body">
+        <h4>Validate against Google's spec</h4>
+        <dl>
+          <dt>What</dt><dd>Check each product against Google Merchant Center's rules — required fields, formatting, allowed values, country-specific extras.</dd>
+          <dt>Why</dt><dd>We need to know what's already correct and what needs fixing or filling in. This also flags issues the merchant must fix at the source (GTINs, item group IDs).</dd>
+        </dl>
+        <div class="example"><strong>This run</strong> Flagged missing <code>google_product_category</code> and a couple of availability formatting fixes — both auto-fillable by the tool.</div>
+      </div>
+    </div>
+
+    <div class="pipeline-step new">
+      <span class="num">3</span>
+      <div class="body">
+        <h4>Scrape each product's web page <span class="badge-new">NEW</span></h4>
+        <dl>
+          <dt>What</dt><dd>For each product, fetch its product detail page on the merchant's website. The scraper tries the structured data Google uses (JSON-LD) first, then falls back to standard HTML tags, then a configurable selector for tricky pages.</dd>
+          <dt>Why</dt><dd>The feed alone often doesn't contain enough context. The PDP usually does — and it's always the source of truth.</dd>
+        </dl>
+        <div class="example"><strong>This run</strong> 4 of 5 PDPs returned structured data successfully. The 5th was a DEV record whose page was effectively empty — the pipeline handled this gracefully and continued with text-only for that one.</div>
+      </div>
+    </div>
+
+    <div class="pipeline-step new">
+      <span class="num">4</span>
+      <div class="body">
+        <h4>Extract packaging image URLs <span class="badge-new">NEW</span></h4>
+        <dl>
+          <dt>What</dt><dd>Pull the URLs of the product's packaging photos from the PDP we just scraped. Capped per product so we don't overload the model.</dd>
+          <dt>Why</dt><dd>This is the bit that unlocks reading what's printed on the box. Without this, the model only sees the text the merchant wrote.</dd>
+        </dl>
+        <div class="example"><strong>This run</strong> 1 image per product, sourced from the merchant's Shopify CDN.</div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <span class="num">5</span>
+      <div class="body">
+        <h4>Generate enhanced attributes with the AI</h4>
+        <dl>
+          <dt>What</dt><dd>Send each product's text + image to <code>gpt-5.4-nano</code> in a single multimodal call. The prompts are written per client (see the wiki) so the output style stays on-brand.</dd>
+          <dt>Why</dt><dd>This is where the actual enhancement happens. For Metagenics, we generate four attributes: a rewritten title, a rewritten description, product highlights (bullet points), and product detail (structured spec triples).</dd>
+        </dl>
+        <div class="example"><strong>This run</strong> 5 products × 4 attributes = 20 calls. Image-enabled. We also re-ran without images as a control — see comparison below.</div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <span class="num">6</span>
+      <div class="body">
+        <h4>Apply enhancement decisions</h4>
+        <dl>
+          <dt>What</dt><dd>Merge the AI-generated values with the client's onboarding decisions — global defaults, per-record overrides, attribute mappings. This is the layer that ensures consistency across daily runs.</dd>
+          <dt>Why</dt><dd>The AI's output is one input among several. The tool needs to know, for example, "always set <code>google_product_category</code> to X for this client unless an override exists".</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <span class="num">7</span>
+      <div class="body">
+        <h4>Write the supplemental feed</h4>
+        <dl>
+          <dt>What</dt><dd>Output a CSV (or upload to a Google Sheet) containing the product <code>id</code> plus only the new and changed attributes. The merchant uploads this as a <em>supplemental</em> feed to Merchant Center, sitting on top of their primary feed.</dd>
+          <dt>Why</dt><dd>We never touch the merchant's primary feed — we add to it. They keep their existing pipeline intact; we layer the improvements on top.</dd>
+        </dl>
+        <div class="example"><strong>This run</strong> See the linked Google Sheet at the top. Tab 2 is the deliverable.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <p>For Metagenics specifically, the four AI-generated attributes are:</p>
+  <table class="spec-table">
+    <thead><tr><th>Attribute</th><th>Format</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>product_highlight</td><td>4–5 bullet points</td><td>Feature highlights shown on the Google Shopping listing.</td></tr>
+      <tr><td>product_detail</td><td>Section : Attribute : Value triples</td><td>Structured spec table — pack size, dosage form, key ingredients with dosage.</td></tr>
+      <tr><td>structured_title</td><td>Single rewritten string</td><td>Google's required format when a title is AI-rewritten (replaces the standard <code>title</code> field).</td></tr>
+      <tr><td>structured_description</td><td>Single rewritten string, 300–500 chars</td><td>Same as above, for descriptions.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ab-test">
+  <h2>Does the image actually help? The A/B test</h2>
+  <p>To prove the image is doing real work — and not that the AI is filling in plausible-sounding generics — we ran the same five products through the model twice. Same prompts, same model, same records. The only difference: whether the packaging image was attached.</p>
+  <p>Below are three products where the image clearly added information that wasn't in the feed text. The fourth product (the DEV record) is a natural control: its PDP returned no image, so both runs effectively saw the same input.</p>
+
+  <!-- Product 1 -->
+  <div class="product-card">
+    <div class="header-row">
+      <img class="pack-img" src="https://www.metagenics.com.au/cdn/shop/files/IH_Eczema_Shield_Kids_Sachets.jpg?v=1761112180&width=400" alt="Eczema Shield Kids packaging">
+      <div class="header-text">
+        <h3>Inner Health Eczema Shield Kids Probiotic Powder</h3>
+        <div class="pid">id 47754546282728 · 1g sachet, 14 pack · <a href="https://metagenics.com.au/products/inner-health-eczema-shield-kids-probiotic-powder-1g-sachet-14-pack" target="_blank">View PDP</a></div>
+      </div>
+    </div>
+    <div class="orig-desc">
+      <strong class="label">Original feed description (this is all of it)</strong>
+      Eczema can be linked to low Vitamin D levels in children. When sun exposure is limited, Inner Health Eczema Shield Kids helps reduce the occurrence of eczema &amp; allergy symptoms such as itching and supports skin health, healing &amp; repair.
+    </div>
+    <table class="ab-table">
+      <thead><tr><th style="width: 160px;">Attribute</th><th class="with-img">With the image</th><th>Without the image</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="attr-name">structured_title</td>
+          <td class="value-cell">Metagenics Inner Health Eczema Shield Kids Probiotic Powder 1g Sachets 14 Pack <span class="hl-strong">(Vitamin D3)</span></td>
+          <td class="value-cell">Metagenics Inner Health Eczema Shield Kids Probiotic Powder Vitamin D Support 1g Sachets 14 Pack</td>
+        </tr>
+        <tr>
+          <td class="attr-name">product_highlight</td>
+          <td class="value-cell"><ul>
+            <li>Supports healthy skin and helps reduce eczema and allergy symptoms</li>
+            <li>Contains <span class="hl-strong">L. rhamnosus (LGG) 10 billion CFU and Bifidobacterium BB-12 1 billion CFU</span></li>
+            <li>Includes <span class="hl-strong">microencapsulated vitamin D3</span> to support immune and skin health</li>
+            <li>Kids probiotic powder in 1 g sachets for easy daily use</li>
+            <li>14 sachets total; designed for children with low sun exposure</li>
+          </ul></td>
+          <td class="value-cell"><ul>
+            <li>Supports healthy skin and helps reduce eczema and allergy symptom occurrence</li>
+            <li>Helps address low vitamin D in children when sun exposure is limited</li>
+            <li>Probiotic powder supports gut-skin health pathways</li>
+            <li>Suitable for kids with limited sun exposure</li>
+            <li>Convenient 1 g sachet format for daily use</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td class="attr-name">product_detail<br><small style="font-weight: normal; text-transform: none; letter-spacing: 0; color: var(--muted);">(selected rows)</small></td>
+          <td class="value-cell"><ul>
+            <li>Key Ingredients : <span class="hl-strong">Lactobacillus rhamnosus (LGG®)</span> : 10 Billion CFU</li>
+            <li>Key Ingredients : <span class="hl-strong">Colecalciferol (Vitamin D3)</span> : 25 micrograms (1000 IU)</li>
+          </ul></td>
+          <td class="value-cell"><ul>
+            <li>Product Info : Dosage Form : Probiotic Powder</li>
+            <li>Key Ingredients : Vitamin D : Present</li>
+          </ul></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="finding">
+      <strong class="label">What the image added</strong>
+      Exact probiotic strains (LGG, BB-12), exact CFU counts, and the precise vitamin D3 form (<em>microencapsulated colecalciferol, 25 µg / 1000 IU</em>). None of this appears anywhere in the feed description. Without the image, the model can only fall back to generic phrasing.
+    </div>
+  </div>
+
+  <!-- Product 2 -->
+  <div class="product-card">
+    <div class="header-row">
+      <img class="pack-img" src="https://www.metagenics.com.au/cdn/shop/files/Untitleddesign_7.png?v=1761109013&width=400" alt="Hayfever Relief Kids packaging">
+      <div class="header-text">
+        <h3>Inner Health Hayfever Relief Kids Probiotic</h3>
+        <div class="pid">id 47754521051368 · 1g sachet, 14 pack · <a href="https://metagenics.com.au/products/inner-health-hayfever-relief-kids-probiotic-sachets" target="_blank">View PDP</a></div>
+      </div>
+    </div>
+    <div class="orig-desc">
+      <strong class="label">Original feed description</strong>
+      Reduce symptoms of seasonal allergies by 50%+. Made with clinically researched ingredients, Hayfever Relief Kids Powder helps reduce and relieve symptoms associated with: Hayfever, Allergic rhinitis, Seasonal allergies, addressing runny or dripping nose, post-nasal drip and enhanced nasal breathing. Made in Australia. Vegetarian &amp; Vegan Friendly.
+    </div>
+    <table class="ab-table">
+      <thead><tr><th style="width: 160px;">Attribute</th><th class="with-img">With the image</th><th>Without the image</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="attr-name">product_highlight</td>
+          <td class="value-cell"><ul>
+            <li>Helps reduce seasonal allergy symptoms in children</li>
+            <li>Supports nasal comfort for hayfever and allergic rhinitis symptoms</li>
+            <li>Contains <span class="hl-strong">Bifidobacterium longum (BB536), B. breve (M-16V), B. infantis (M-63)</span></li>
+            <li>Live probiotic powder in 1 g sachets for daily use</li>
+            <li><span class="hl">5 billion CFU per sachet</span>; 14 sachets per pack for ages 3+</li>
+          </ul></td>
+          <td class="value-cell"><ul>
+            <li>Helps reduce symptoms of seasonal allergies and hay fever in kids</li>
+            <li>Contains <span class="hl">probiotic strains</span> to support immune balance during allergy season</li>
+            <li>1 g powder sachets for convenient dosing and easy mixing</li>
+            <li>14 sachets per pack for daily use during allergy periods</li>
+            <li>Made in Australia, vegetarian and vegan friendly</li>
+          </ul></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="finding">
+      <strong class="label">What the image added</strong>
+      Without the image, the model can only say "contains probiotic strains" — a generic stand-in. With the image, three specific strain codes (BB536, M-16V, M-63) come through verbatim. These are the names a pharmacist or informed parent would actually search for.
+    </div>
+  </div>
+
+  <!-- Product 3 -->
+  <div class="product-card">
+    <div class="header-row">
+      <img class="pack-img" src="https://www.metagenics.com.au/cdn/shop/files/HighStrengthOmega-3FruitPunch170ml.jpg?v=1751599859&width=400" alt="Omega-3 170ml packaging">
+      <div class="header-text">
+        <h3>Ethical Nutrients High Strength Omega-3 Fruit Punch 170ml</h3>
+        <div class="pid">id 46471475364072 · oral liquid · <a href="https://metagenics.com.au/products/ethical-nutrients-high-strength-omega-3-fruit-punch-170ml-liquid" target="_blank">View PDP</a></div>
+      </div>
+    </div>
+    <div class="orig-desc">
+      <strong class="label">Original feed description</strong>
+      High Strength Omega-3 is a supplement for mild arthritis, cardiovascular health and cognitive function, helping provide anti-inflammatory relief, support a healthy heart, and maintain healthy blood lipids, eye health and nervous system function.
+    </div>
+    <table class="ab-table">
+      <thead><tr><th style="width: 160px;">Attribute</th><th class="with-img">With the image</th><th>Without the image</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="attr-name">structured_title</td>
+          <td class="value-cell">Ethical Nutrients High Strength Omega-3 Fruit Punch 170ml Liquid, Fish Oil with <span class="hl-strong">EPA DHA</span> for Heart Brain Eye Health</td>
+          <td class="value-cell">Ethical Nutrients High Strength Omega-3 Fruit Punch 170ml Liquid, Anti-Inflammatory Support, Omega-3 Supplement</td>
+        </tr>
+        <tr>
+          <td class="attr-name">product_highlight</td>
+          <td class="value-cell"><ul>
+            <li>Supports mild arthritis, inflammatory balance, and joint comfort</li>
+            <li>Provides omega-3 triglycerides with <span class="hl-strong">EPA 1.9g and DHA 927mg per 5mL</span></li>
+            <li>Supports heart health and healthy blood lipids</li>
+            <li>Helps maintain eye health and nervous system function</li>
+            <li>Oral liquid fruit punch; 170mL per bottle</li>
+          </ul></td>
+          <td class="value-cell"><ul>
+            <li>Supports mild arthritis comfort with anti-inflammatory omega-3s</li>
+            <li>Helps maintain healthy heart, blood lipids, and cardiovascular health</li>
+            <li>Supports cognitive function, eye health, and nervous system function</li>
+            <li>Provides omega-3 fatty acids in a convenient fruit punch liquid</li>
+            <li>170 mL bottle with great-tasting flavour for daily use</li>
+          </ul></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="finding">
+      <strong class="label">What the image added</strong>
+      Exact dosages — <em>EPA 1.9g / DHA 927mg per 5mL</em> — appear only with the image. The feed text doesn't mention EPA or DHA by name at all. Customers searching for "high strength DHA fish oil" or comparing dosages would find this listing only in the image-enabled version.
+    </div>
+  </div>
+
+  <!-- Control -->
+  <div class="product-card">
+    <div class="header-row">
+      <div class="pack-img placeholder">No image<br>available</div>
+      <div class="header-text">
+        <h3>Metagenics Alergeze 60 Tablets <small style="color: var(--muted); font-weight: normal;">(natural control)</small></h3>
+        <div class="pid">id 46688048808168 · DEV record · its PDP returned no image</div>
+      </div>
+    </div>
+    <div class="orig-desc">
+      <strong class="label">Original feed description (truncated — already rich)</strong>
+      Alergeze is a highly effective solution for relieving symptoms of hayfever, nasal congestion, sneezing, and nasal itching. Alergeze contains a potent combination of ingredients, including NRA2™ and Quercetin, which act as powerful anti-inflammatories to alleviate allergic reactions. Additionally, Bromelain is included to support digestive enzyme function…
+    </div>
+    <table class="ab-table">
+      <thead><tr><th style="width: 160px;">Attribute</th><th class="with-img">"With image" run (no image was available)</th><th>Without the image</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="attr-name">structured_title</td>
+          <td class="value-cell">Metagenics Alergeze NRA2 &amp; Quercetin Hayfever Relief Tablets 60 Pack</td>
+          <td class="value-cell">Metagenics Alergeze Allergy Relief Tablets with NRA2 and Quercetin 60 Pack</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="finding">
+      <strong class="label">Why this matters as a control</strong>
+      This product's PDP returned no image, and both columns produce broadly equivalent output — because the feed description already contained the key ingredients (NRA2, Quercetin, Bromelain). This is good: <strong>when no image is available, the pipeline degrades gracefully back to text-only with no regression.</strong>
+    </div>
+  </div>
+</section>
+
+<section id="output">
+  <h2>What gets handed to the merchant</h2>
+  <p>The deliverable is a supplemental feed — basically a spreadsheet of new and changed attributes that sits on top of the merchant's existing primary feed in Merchant Center. We never touch the primary feed.</p>
+  <p>The Google Sheet linked at the top of this report is the live output of this test run:</p>
+  <ul>
+    <li><strong>Tab 1 — Original Feed:</strong> what the merchant's feed currently says about each of the 5 products. This is the input.</li>
+    <li><strong>Tab 2 — Enhanced Output (with images):</strong> the AI-generated attributes for each product — rewritten title, rewritten description, highlights, and detail triples. This is what would go into the supplemental feed.</li>
+  </ul>
+  <div class="callout">
+    <strong class="label">A small format note</strong>
+    <p>Rewritten titles and descriptions in Tab 2 start with <code>trained_algorithmic_media:</code>. That's Google's required marker for any AI-generated title or description — it tells Merchant Center the field was produced by a model. The tool adds this automatically.</p>
+  </div>
+  <p>You can also see the original feed in full at the second link at the top of this report. The 5 test products are the first 5 entries of that file.</p>
+</section>
+
+<section id="limitations">
+  <h2>Honest limitations</h2>
+  <table class="spec-table">
+    <thead><tr><th style="width: 30%;">Limitation</th><th>What it means in practice</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Rewriting the title means giving up the standard <code>title</code> field</td>
+        <td>Google's rules say you can't use both the standard <code>title</code> and the AI-rewritten <code>structured_title</code> for the same product. So during onboarding, the merchant has to decide: keep their existing titles, or let us rewrite them. Same for descriptions.</td>
+      </tr>
+      <tr>
+        <td>Length limits live in the prompt, not the code</td>
+        <td>Google caps title at 150 chars and description at 5000. We tell the model these limits in the prompt and it generally obeys, but if it ever overshoots, the tool won't auto-truncate. The merchant review of the supplemental feed catches this before upload.</td>
+      </tr>
+      <tr>
+        <td>Scraping product pages adds time</td>
+        <td>Adds roughly 3–10 seconds per product, longer for sites that need a real browser (e.g. heavy JavaScript). Not a problem for daily runs (we only re-scrape new or changed products) but it means onboarding 500 products takes some patience.</td>
+      </tr>
+      <tr>
+        <td>Image input only helps if the PDP actually has good packaging photos</td>
+        <td>If the merchant's site only has lifestyle shots, or the packaging photo is low-resolution, the image input contributes less. Most quality DTC sites are fine; some legacy sites are not. The pipeline handles "no image found" cleanly — it just falls back to text-only.</td>
+      </tr>
+      <tr>
+        <td>Feed source quality still matters</td>
+        <td>If the PDP itself is sparse and there's no decent packaging photo, image input can't rescue it. This is where the planned pre-onboarding audit step (per the kind of work James has been running) becomes the right answer — flag the structural data gaps that the merchant must fix at source before any AI enhancement gets involved.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ops">
+  <h2>How this would run in production</h2>
+  <p>Three things worth knowing about the running model:</p>
+  <h4>Cost</h4>
+  <p>Running the AI step on a typical 300-product feed costs only a few dollars in OpenAI usage per full refresh. Adding image input increases that by roughly 30–50%. For daily refreshes, the per-day cost is far smaller, because we only generate attributes for products that are <em>new</em> or have <em>changed</em> — see "Memory" below.</p>
+  <h4>Memory</h4>
+  <p>The tool remembers what it generated for each product. A daily run compares today's feed to yesterday's, identifies new and changed products, and only re-generates for those. Everything else is reused from memory. This means a stable 300-product feed costs almost nothing day-to-day — costs only spike when the merchant adds new SKUs.</p>
+  <h4>Automation</h4>
+  <p>The whole pipeline — from reading the merchant's feed to producing the supplemental output — can run unattended on a schedule (e.g. nightly). We haven't put it on a schedule yet: that's a hosting decision once 2–3 clients are live and we know what the cadence should look like (daily vs. weekly, time of day, retry handling, etc.).</p>
+  <h4>Delivery to Merchant Center</h4>
+  <p>The supplemental feed can be delivered to Merchant Center via the standard supplemental feed mechanisms — CSV upload, scheduled fetch from a URL, or via a Google Sheet. The Google Sheet route (like the one linked at the top of this report) is particularly nice for clients who want to glance over what's about to go live before it's published.</p>
+</section>
+
+<section id="next">
+  <h2>What's next</h2>
+  <ol>
+    <li><strong>Furniture client — RJ Living.</strong> Very different attribute profile to supplements: dimensions, materials, weight, colour. The image input should pull dimension diagrams and material tags from PDP photos. This is a real test of whether the generic prompt design holds up across industries — directly answering the "specialised vs. universal agent" question from the 29 April catch-up.</li>
+    <li><strong>Apparel client — Bydee swimwear.</strong> Variants, colour, size, age group, gender. Image input is especially valuable for confirming colour and pattern. This will probably expose the next round of attribute-format gaps.</li>
+    <li><strong>Wire in the pre-onboarding audit.</strong> Before we even start enhancing, we should run the kind of structural audit James has been doing — flag duplicate titles, missing size attributes in titles, exclusion rates, items the merchant must fix at source vs. items we can fix. The audit output feeds into onboarding as a set of instructions rather than being discovered ad-hoc mid-process.</li>
+    <li><strong>Operational hardening for daily runs.</strong> Once we have 2–3 clients live, pick a hosting setup, decide on cadence (probably daily), and either auto-upload to Merchant Center or hand off via a Google Sheet for review.</li>
+  </ol>
+</section>
+
+<div class="footer">
+  Shopping Feed Enhancer · Internal report · 15 May 2026<br>
+  Questions or feedback: ping Darren on Slack.
+</div>
+
+</div>
+</body>
+</html>
